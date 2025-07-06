@@ -11,10 +11,19 @@ export const getComment = async (
   content: string
 ): Promise<string> => {
   const body = {
-    model: `text-davinci-00${config["opt-model-type"]}`,
-    prompt: createPrompt(domain, config, content),
-    temperature: 0,
-    max_tokens: 3000,
+    model: "gpt-4o",
+    messages: [
+      {
+        role: "system",
+        content: "You are a helpful assistant that writes short, relevant comments for social media posts.",
+      },
+      {
+        role: "user",
+        content: createPrompt(domain, config, content),
+      },
+    ],
+    temperature: 0.7,
+    max_tokens: 300,
   };
 
   const options = {
@@ -26,7 +35,7 @@ export const getComment = async (
     body: JSON.stringify(body),
   };
 
-  const resp = await fetch("https://api.openai.com/v1/completions", options);
+  const resp = await fetch("https://api.openai.com/v1/chat/completions", options);
   const chatGPTResp = await resp.json();
 
   if (!resp.ok) {
@@ -41,7 +50,7 @@ export const getComment = async (
     return "";
   }
 
-  let comment = (chatGPTResp?.["choices"]?.[0]?.["text"] || "")
+  let comment = (chatGPTResp?.choices?.[0]?.message?.content || "")
     .replace(/^\s+|\s+$/g, "")
     .replace(/(^"|"$)/g, "");
 
